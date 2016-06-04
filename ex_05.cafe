@@ -1,0 +1,23 @@
+-- in ex_05
+
+open NAT .
+  op ext-fib : Nat -> Nat .
+  op ext-fib-2 : Nat -> Nat .
+  op ext-fib-3 : Nat -> Nat .
+
+  var NzX : NzNat .
+
+  eq ext-fib(0) = 0 .
+  eq ext-fib(NzX) = ext-fib-2(p NzX) .
+  eq ext-fib-2(0) = 1 .
+  eq ext-fib-2(NzX) = ext-fib-3(p NzX) .
+  eq ext-fib-3(0) = 2 .
+  eq ext-fib-3(NzX) = ext-fib(p NzX) + ext-fib(NzX) + ext-fib(NzX + 1).
+
+  red ext-fib(0) .
+  red ext-fib(1) .
+  red ext-fib(2) .
+  red ext-fib(3) .
+  red ext-fib(4) .
+  red ext-fib(10) .
+close

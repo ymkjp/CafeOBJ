@@ -1,0 +1,15 @@
+-- Factorial
+
+open NAT .
+  op _! : Nat -> Nat .
+  var NzX : NzNat .
+  eq 0 ! = 1 .
+  eq NzX ! = NzX * ((p NzX)!) .
+  --
+  red 0 ! .
+  red 1 ! .
+  red 10 ! .
+  -- red 100 ! .
+  -- red 1000 ! .
+  -- red 10000! .
+close
