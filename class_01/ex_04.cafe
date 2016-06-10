@@ -3,25 +3,28 @@
 open NAT .
   op cond : Bool Nat Nat -> Nat .
   op g : Nat Nat -> Nat .
-  op oedc-fact : Nat -> Nat .
-  op fact : Nat -> Nat .
+  op oedc : Nat -> Nat .
+  op sumf : Nat -> Nat .
 
   vars X Y : Nat .
   var NzX : NzNat .
-  eq fact(0) = 1 .
-  eq fact(NzX) = NzX * fact(p NzX) .
+  eq sumf(0) = 0 .
+  eq sumf(NzX) = NzX + sumf(p NzX) .
 
   -- cond
   eq cond(true,X,Y) = X .
   eq cond(false,X,Y) = Y .
 
   -- g
-  eq g(X,Y) = cond(X > Y, g(X,2 * Y) * g(sd(X,Y),2 * Y), X) .
+  eq g(X,Y) = cond(X > Y, g(X,2 * Y) + g(sd(X,Y),2 * Y), X) .
 
-  -- oedc-fact
-  eq oedc-fact(0) = 1 .
-  eq oedc-fact(NzX) = g(NzX,1) .
+  -- oedc
+  eq oedc(0) = 0 .
+  eq oedc(NzX) = g(NzX,1) .
 
-  red fact(5) == oedc-fact(5).
-  red fact(120) == oedc-fact(120).
+  red sumf(1) == oedc(1).
+  red sumf(2) == oedc(2).
+  red sumf(120) == oedc(120).
+
+  -- in ex_04
 close
