@@ -1,4 +1,4 @@
--- OddEvenAndConquerFactorial
+-- in ex_07
 
 open NAT .
   op _! : Nat -> Nat .

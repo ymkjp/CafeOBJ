@@ -1,4 +1,4 @@
--- Ex 4
+-- in ex_04
 
 open NAT .
   op cond : Bool Nat Nat -> Nat .
@@ -25,6 +25,4 @@ open NAT .
   red sumf(1) == oedc(1).
   red sumf(2) == oedc(2).
   red sumf(120) == oedc(120).
-
-  -- in ex_04
 close

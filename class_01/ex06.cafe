@@ -1,4 +1,4 @@
--- Factorial
+-- in ex_06
 
 open NAT .
   op _! : Nat -> Nat .
