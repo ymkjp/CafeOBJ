@@ -1,0 +1,251 @@
+-- Ex. 1
+mod! GCD {
+  -- imports
+  pr(NAT) .
+  -- signature
+  op gcd : Nat Zero -> Nat .
+  op gcd : Nat NzNat -> NzNat .
+  op gcd : Nat Nat -> Nat .
+  -- vars
+  var X : Nat .
+  var NzY : NzNat .
+  -- equations
+  eq gcd(X, 0) = X .
+  eq gcd(X, NzY) = gcd(NzY, X rem NzY) .
+}
+
+mod! LCM {
+  pr(GCD) .
+  op lcm : Nat Zero -> Zero .
+  op lcm : Nat NzNat -> Nat .
+  op lcm : Nat Nat -> Nat .
+  var X : Nat .
+  var NzY : NzNat .
+  eq lcm(X, 0) = 0 .
+  eq lcm(X, NzY) = (X quo gcd(X, NzY)) * NzY .
+}
+
+open LCM .
+  red lcm(24,36) . -- compute the lcm of 24 & 36
+  red lcm(2015,31031) . -- compute the lcm of 2015 & 31031 close
+close
+
+-- Ex. 2
+mod! Factorial {
+  pr(NAT)
+  op fact : Nat -> Nat .
+  var NzX : NzNat .
+  eq fact(0) = 1 .
+  eq fact(NzX) = NzX * fact(p NzX) .
+}
+
+mod! OEDC {
+  pr(NAT)
+  op cond : Bool Nat Nat -> Nat .
+  op g : Nat Nat -> Nat .
+  op oedc-fact : Nat -> Nat .
+  vars X Y : Nat .
+  var NzX : NzNat .
+  -- cond
+  eq cond(true,X,Y) = X .
+  eq cond(false,X,Y) = Y .
+  -- g
+  eq g(X,Y) = cond(X > Y, g(X,2 * Y) * g(sd(X,Y),2 * Y), X) .
+  -- oedc-fact
+  eq oedc-fact(0) = 1 .
+  eq oedc-fact(NzX) = g(NzX,1) .
+}
+
+open OEDC .
+  red oedc-fact(5) .  -- 120
+close
+
+-- Ex. 3
+
+mod! NAT-ERR {
+  pr(NAT)
+  [Nat ErrNat < Nat&Err]
+  op errNat : -> ErrNat {constr} .
+  op p_ : Zero -> ErrNat .
+  op p_ : ErrNat -> ErrNat .
+  op p_ : Nat&Err -> Nat&Err .
+  op _quo_ : Nat&Err Zero -> ErrNat .
+  op _quo_ : Nat&Err ErrNat -> ErrNat .
+  op _quo_ : ErrNat Nat&Err -> ErrNat .
+  op _quo_ : Nat&Err Nat&Err -> Nat&Err .
+  var NE : Nat&Err .
+  eq p 0 = errNat .
+  eq p errNat = errNat .
+  eq NE quo 0 = errNat .
+  eq NE quo errNat = errNat . eq errNat quo NE = errNat .
+}
+
+mod! NATLIST {
+  -- imports
+  pr(NAT-ERR)
+  -- signature
+  [Nil NnNatList < NatList]
+  op nil : -> Nil {constr} .
+  op _|_ : Nat NatList -> NnNatList {constr} .
+  op hd : Nil -> ErrNat .
+  op hd : NnNatList -> Nat .
+  op hd : NatList -> Nat&Err .
+  op tl : NatList -> NatList .
+  op _@_ : NatList NatList -> NatList .
+
+  op [_.._] : Nat Nat -> NatList .
+  op if_then {_} else {_} : Bool NatList NatList -> NatList .
+
+  -- CafeOBJ vars
+  vars X Y : Nat .
+  vars L L2 : NatList .
+  -- equations
+  -- hd
+  eq hd(nil) = errNat .
+  eq hd(X | L) = X .
+  -- tl
+  eq tl(nil) = nil .
+  eq tl(X | L) = L .
+  -- _@_
+  eq nil @ L2 = L2 .
+  eq (X | L) @ L2 = X | (L @ L2) .
+
+  eq [X .. Y] = if X > Y then {nil} else {X | [X + 1 .. Y]} .
+  eq if true then {L} else {L2} = L .
+  eq if false then {L} else {L2} = L2 .
+}
+
+mod! QSORT {
+  -- imports
+  pr(NATLIST)
+  -- signature
+  op qsort : NatList -> NatList .
+  op partition : Nat NatList NatList NatList -> NatList .
+  -- CafeOBJ vars
+  vars X Y : Nat .
+  vars L LL RL : NatList .
+  -- equations
+  -- sort
+  eq qsort(nil) = nil .
+  eq qsort(X | nil) = X | nil .
+  eq qsort(X | Y | L) = partition(X,Y | L,nil,nil) .
+  -- partition
+  -- 番兵Xと先頭要素Yと残りのリストLを受け取る。
+  -- Y をLLに入れるか、RLに入れるか。これを繰り返せばやがて L は nil になる。
+  -- nil になれば LL (Xよりも小さかった) と RL (X + Xよりも大きかった) も
+  -- それぞれ sort したうえで結合して返す。
+  eq partition(X,nil,LL,RL) = qsort(LL) @ (X | qsort(RL)) .
+  eq partition(X,Y | L,LL,RL)
+    = if Y < X
+      then {partition(X,L,Y | LL,RL)}
+      else {partition(X,L,LL,Y | RL)} .
+}
+
+mod! MSORT {
+  -- imports
+  pr(NATLIST)
+  -- signature
+  op msort : NatList -> NatList .
+  op merge : NatList NatList -> NatList .
+  -- CafeOBJ vars
+  vars X Y : Nat .
+  vars L LL RL : NatList .
+  -- equations
+  -- sort
+  eq msort(nil) = nil .
+  eq msort(X | nil) = X | nil .
+  eq msort(X | L) = merge(sort(X | nil), sort(L)) .
+  -- merge
+  eq merge(LL, nil) = sort(LL) .
+  eq merge(nil, RL) = sort(RL) .
+  eq merge(X | LL, Y | RL)
+    = if X < Y
+      then { X | merge(LL, Y | RL) }
+      else { Y | merge(X | LL, RL) } .
+}
+
+open MSORT .
+  red msort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
+close
+
+-- Ex. 5
+
+mod! BOOL-OPERATOR {
+  op _&&_ : Bool Bool -> Bool .
+  op _||_ : Bool Bool -> Bool .
+  vars X Y : Bool .
+  eq true && true = true .
+  eq true && false = false .
+  eq false && false = false .
+  eq X && Y = Y && X .
+  eq true || X = true .
+  eq false || X = X .
+}
+
+mod! HAMMING {
+  -- imports
+  pr(NATLIST)
+  -- signature
+  op hamming : Nat -> NatList .
+  op calc : Nat Nat NatList -> NatList .
+  op join : Nat NatList -> NatList .
+  -- CafeOBJ vars
+  vars X, Y, NzX : NzNat .
+  vars L LL RL : NatList .
+  -- equations
+  -- hamming
+  eq hamming(0) = nil .
+  eq hamming(NzX) = calc(1|nil, NzX) .
+  -- calc
+  eq calc(X | L, Y) =
+    if Y < 2 * X then { X | calc(L, Y)} else {
+      if Y < 3 * X then {
+        X | calc(join(2 * X, L), Y)
+      } else {
+        if Y < 5 * X then {
+          X | calc(join(3 * X, join(2 * X, L)), Y)
+        } else {
+          if Y < 5 * X then {
+            X | calc(join(3 * X, join(2 * X, L)), Y)
+          } else {
+            X | shan(join(5 * X, join(3 * X, join(2 * X, L))), Y)
+          }
+        }
+      }
+    } .
+  eq join(X, nil) = X | nil .
+  eq join(X, Y | L)
+    = if X < Y
+      then { X | Y | L}
+      else {join2(X, Y | L)} .
+  eq join2()
+}
+
+-- https://oeis.org/A051037
+open HAMMING .
+  red hamming(0) .
+  red hamming(1) .
+  red hamming(8) .
+--  red hamming(120) .
+close
+
+open NATLIST .
+  --  red hd(0 | 1 | nil) .
+  -- red tl(0 | 1 | nil) .
+  -- red [2 .. 5] .
+close
+
+open GCD .
+  -- red gcd(24,36) . -- compute the gcd of 24 & 36
+  red gcd(2015,31031) . -- compute the gcd of 2015 & 31031
+close
+
+open Factorial .
+  red fact(5) . -- 120
+close
+
+set trace on
+open QSORT .
+  red qsort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
+close
+set trace off
