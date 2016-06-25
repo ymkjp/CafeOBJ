@@ -154,10 +154,10 @@ mod! MSORT {
   -- sort
   eq msort(nil) = nil .
   eq msort(X | nil) = X | nil .
-  eq msort(X | L) = merge(sort(X | nil), sort(L)) .
+  eq msort(X | L) = merge(msort(X | nil), msort(L)) .
   -- merge
-  eq merge(LL, nil) = sort(LL) .
-  eq merge(nil, RL) = sort(RL) .
+  eq merge(LL, nil) = msort(LL) .
+  eq merge(nil, RL) = msort(RL) .
   eq merge(X | LL, Y | RL)
     = if X < Y
       then { X | merge(LL, Y | RL) }
@@ -165,7 +165,7 @@ mod! MSORT {
 }
 
 open MSORT .
-  red msort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
+  -- red msort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
 close
 
 -- Ex. 5
@@ -187,7 +187,7 @@ mod! HAMMING {
   pr(NATLIST)
   -- signature
   op hamming : Nat -> NatList .
-  op calc : Nat Nat NatList -> NatList .
+  op ham : NatList Nat -> NatList .
   op join : Nat NatList -> NatList .
   -- CafeOBJ vars
   vars X, Y, NzX : NzNat .
@@ -195,45 +195,27 @@ mod! HAMMING {
   -- equations
   -- hamming
   eq hamming(0) = nil .
-  eq hamming(NzX) = calc(1|nil, NzX) .
-  -- calc
-  eq calc(X | L, Y) =
-    if Y < 2 * X then { X | calc(L, Y)} else {
+  eq hamming(NzX) = ham(1 | nil, NzX) .
+  -- ham
+  eq ham(X | L, Y) =
+    if Y < 2 * X then { X | ham(L, Y) } else {
       if Y < 3 * X then {
-        X | calc(join(2 * X, L), Y)
+        X | ham(join(2 * X, L), Y)
       } else {
         if Y < 5 * X then {
-          X | calc(join(3 * X, join(2 * X, L)), Y)
+          X | ham(join(3 * X, join(2 * X, L)), Y)
         } else {
-          if Y < 5 * X then {
-            X | calc(join(3 * X, join(2 * X, L)), Y)
-          } else {
-            X | shan(join(5 * X, join(3 * X, join(2 * X, L))), Y)
-          }
+            X | ham(join(5 * X, join(3 * X, join(2 * X, L))), Y)
         }
       }
     } .
   eq join(X, nil) = X | nil .
   eq join(X, Y | L)
-    = if X < Y
-      then { X | Y | L}
-      else {join2(X, Y | L)} .
-  eq join2()
+    = if X < Y then { X | Y | L }
+      else { if Y < X then { Y | join(X, L) }
+        else { Y | L }
+      } .
 }
-
--- https://oeis.org/A051037
-open HAMMING .
-  red hamming(0) .
-  red hamming(1) .
-  red hamming(8) .
---  red hamming(120) .
-close
-
-open NATLIST .
-  --  red hd(0 | 1 | nil) .
-  -- red tl(0 | 1 | nil) .
-  -- red [2 .. 5] .
-close
 
 open GCD .
   -- red gcd(24,36) . -- compute the gcd of 24 & 36
@@ -244,8 +226,20 @@ open Factorial .
   red fact(5) . -- 120
 close
 
-set trace on
 open QSORT .
   red qsort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
 close
-set trace off
+
+-- open NATLIST .
+  -- red hd(0 | 1 | nil) .
+  -- red tl(0 | 1 | nil) .
+  -- red [2 .. 5] .
+-- close
+
+-- https://oeis.org/A051037
+open HAMMING .
+  red hamming(0) .
+  red hamming(1) .
+  red hamming(8) .
+--  red hamming(120) .
+close
