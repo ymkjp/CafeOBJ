@@ -383,3 +383,37 @@ open BILL .
   red mkBill(cat,c1) .
   red mkBill(cat,c2) .
 close
+
+-- Write some more test code and do some more testing for the programs
+
+-- What if items are not unique?
+-- -> Accepted
+open CATALOG .
+ op cat : -> Catalog .
+ eq cat = ('a,("apple",150))
+   | ('o,("orange",100))
+   | ('o,("orange",120))
+   | ('t,("tomato",90)) | empCatalog .
+ red cat .
+close
+
+-- What if items are not unique?
+-- -> Merged by key
+open CART .
+ op c : -> Cart .
+ eq c = ('o,4) | ('t,10) | ('o,6) | ('o,9) | empCart .
+ red norm(c) .
+close
+
+-- What if items are not unique?
+-- -> Earlier item's price in catalogue is used.
+open BILL .
+ op cat : -> Catalog .
+ op c : -> Cart .
+ eq cat = ('a,("apple",150))
+   | ('o,("orange",100))
+   | ('o,("orange",120))
+   | ('t,("tomato",90)) | empCatalog .
+ eq c = ('o,4) | ('t,10) | ('o,6) | ('o,9) | empCart .
+ red mkBill(cat,c) .
+close
