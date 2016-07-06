@@ -155,6 +155,29 @@ mod! GQSORT(E  ::  TRIV-ERR-ORD) {
       else {partition(X,L,LL,Y | RL)} .
 }
 
+mod! GMSORT(E :: TRIV-ERR-ORD) {
+  -- imports
+  pr(GLIST-ERR(E))
+  -- signature
+  op msort : List -> List .
+  op merge : List List -> List .
+  -- CafeOBJ vars
+  vars X Y : Elt.E .
+  vars L LL RL : List .
+  -- equations
+  -- sort
+  eq msort(nil) = nil .
+  eq msort(X | nil) = X | nil .
+  eq msort(X | L) = merge(msort(X | nil), msort(L)) .
+  -- merge
+  eq merge(LL, nil) = msort(LL) .
+  eq merge(nil, RL) = msort(RL) .
+  eq merge(X | LL, Y | RL)
+    = if ord.E(X, Y)
+      then { X | merge(LL, Y | RL) }
+      else { Y | merge(X | LL, RL) } .
+}
+
 view TRIV-ERR-ORD2NAT-ERR from TRIV-ERR-ORD to NAT-ERR {
   sort Elt -> Nat,
   sort Err -> ErrNat,
@@ -247,37 +270,59 @@ view TRIV-ERR-ORD2STRLIST1 from TRIV-ERR-ORD to STRLIST1 {
 
 --
 
-open NATLIST8 .
-  red hd(nlnil) .
-  red hd((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
-  red tl(nlnil) .
-  red tl((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
+--  open NATLIST8 .
+--    red hd(nlnil) .
+--    red hd((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
+--    red tl(nlnil) .
+--    red tl((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
+--  close
+--
+--  open NATLISTLIST1 .
+--    red hd(nllnil) .
+--    red hd((4 | 3 | nlnil) | (2 | 1 | 0 | nlnil) | nllnil) .
+--    red tl(nlnil) .
+--    red tl((4 | 3 | nlnil) | (2 | 1 | 0 | nlnil) | nllnil) .
+--  close
+--
+--  open GQSORT(E <= TRIV-ERR-ORD2NAT-ERR) .
+--    red qsort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
+--  close
+--
+--  open GQSORT(E <= TRIV-ERR-ORD2STRING-ERR) .
+--    red qsort("Lisp" | "Python" | "Pascal" | "CafeOBJ" | "C" |
+--    "Java" | "Prolog" | "Fortran" | nil) .
+--  close
+--
+--  open GQSORT(E <= TRIV-ERR-ORD2NATLIST9) .
+--    red qsort((1 | 2 | nlnil) | (3 | 0 | 2 | nlnil) | (2 | nlnil) |
+--      (0 | nlnil) | nlnil | (1 | 1 | nlnil) | (3 | 0 | 1 | nlnil) |
+--      (1 | 0 | nlnil) | nil) .
+--  close
+--
+--  open GQSORT(E <= TRIV-ERR-ORD2STRLIST1) .
+--    red qsort(("CafeOBJ" | "Fortran" | slnil) |
+--    ("Java" | "C" | "Fortran" | slnil) | ("Fortran" | slnil) |
+--    ("C" | slnil) | slnil | ("CafeOBJ" | "CafeOBJ" | slnil) |
+--    ("Java" | "C" | "CafeOBJ" | slnil) | ("CafeOBJ" | "C" | slnil) | nil) .
+--  close
+
+open GMSORT(E <= TRIV-ERR-ORD2NAT-ERR) .
+  red msort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
 close
 
-open NATLISTLIST1 .
-  red hd(nllnil) .
-  red hd((4 | 3 | nlnil) | (2 | 1 | 0 | nlnil) | nllnil) .
-  red tl(nlnil) .
-  red tl((4 | 3 | nlnil) | (2 | 1 | 0 | nlnil) | nllnil) .
-close
-
-open GQSORT(E <= TRIV-ERR-ORD2NAT-ERR) .
-  red qsort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
-close
-
-open GQSORT(E <= TRIV-ERR-ORD2STRING-ERR) .
-  red qsort("Lisp" | "Python" | "Pascal" | "CafeOBJ" | "C" |
+open GMSORT(E <= TRIV-ERR-ORD2STRING-ERR) .
+  red msort("Lisp" | "Python" | "Pascal" | "CafeOBJ" | "C" |
   "Java" | "Prolog" | "Fortran" | nil) .
 close
 
-open GQSORT(E <= TRIV-ERR-ORD2NATLIST9) .
-  red qsort((1 | 2 | nlnil) | (3 | 0 | 2 | nlnil) | (2 | nlnil) |
+open GMSORT(E <= TRIV-ERR-ORD2NATLIST9) .
+  red msort((1 | 2 | nlnil) | (3 | 0 | 2 | nlnil) | (2 | nlnil) |
     (0 | nlnil) | nlnil | (1 | 1 | nlnil) | (3 | 0 | 1 | nlnil) |
     (1 | 0 | nlnil) | nil) .
 close
 
-open GQSORT(E <= TRIV-ERR-ORD2STRLIST1) .
-  red qsort(("CafeOBJ" | "Fortran" | slnil) |
+open GMSORT(E <= TRIV-ERR-ORD2STRLIST1) .
+  red msort(("CafeOBJ" | "Fortran" | slnil) |
   ("Java" | "C" | "Fortran" | slnil) | ("Fortran" | slnil) |
   ("C" | slnil) | slnil | ("CafeOBJ" | "CafeOBJ" | slnil) |
   ("Java" | "C" | "CafeOBJ" | slnil) | ("CafeOBJ" | "C" | slnil) | nil) .
