@@ -1,24 +1,33 @@
+-- err の実装を制約に課している
 mod* TRIV-ERR {
   [Elt Err < Elt&Err]
   op err : -> Err .
 }
 
+-- if の実装を制約に課している
 mod* TRIV-ERR-IF {
   [Elt Err < Elt&Err]
   op err : -> Err .
   op if_then{_}else{_} : Bool Elt&Err Elt&Err -> Elt&Err .
 }
 
+
+-- インスタンス化に2つの引数をとる
+-- FE, SE は命名
+-- First Element, Second Element
 mod! PAIR(FE :: TRIV, SE :: TRIV) {
   [Pair]
   op (_,_) : Elt.FE Elt.SE -> Pair {constr} .
 }
 
+-- インスタンス化に3つの引数をとる
 mod! TRIPLE(FE :: TRIV, SE :: TRIV, TE :: TRIV) {
   [Triple]
   op (_,_,_) : Elt.FE Elt.SE Elt.TE -> Triple {constr} .
 }
 
+-- 汎用的なリスト
+-- 要素はERRを扱えればよい
 mod! GLIST-ERR(E :: TRIV-ERR) {
   [Nil NnList < List]
   [List ErrList < List&Err]
@@ -46,6 +55,8 @@ mod! GLIST-ERR(E :: TRIV-ERR) {
   eq if false then {LE} else {LE2} = LE2 .
 }
 
+-- 2値をとる
+-- if 式をこのモジュールに定義するのは腑に落ちる
 mod! BOOL-ERR {
   [Bool ErrBool < Bool&Err]
   op errBool : -> ErrBool {constr} .
@@ -56,6 +67,7 @@ mod! BOOL-ERR {
   eq if false then {B1} else {B2} = B2 .
 }
 
+-- Nat をデフォルトの引数にとってインスタンス化する
 mod! NAT-ERR principal-sort Nat {
   pr(NAT)
   [Nat ErrNat < Nat&Err]
@@ -69,6 +81,10 @@ mod! NAT-ERR principal-sort Nat {
   eq if false then {NE1} else {NE2} = NE2 .
 }
 
+-- キーバリュー型
+-- バリューには if 式の実装を課している
+-- キーには ERR, ORD, IF などの制約はない
+-- PAIRの制約を満たすため (_,_) を実装している
 mod! ENTRY(K :: TRIV, V :: TRIV-ERR-IF) {
   pr(PAIR(K,V) * {sort Pair -> Entry})
   [Entry ErrEntry < Entry&Err]
@@ -78,6 +94,7 @@ mod! ENTRY(K :: TRIV, V :: TRIV-ERR-IF) {
   eq (K,err.V) = errEntry .
 }
 
+-- view はインラインで展開できる
 mod! TABLE {
   pr(BOOL-ERR)
   pr(GLIST-ERR(E <= view from TRIV-ERR to ENTRY {
@@ -99,23 +116,27 @@ mod! TABLE {
   var T : Table .
   var TE : Table&Err .
 
+  -- 要素が1の集合
   op singleton : Elt.K Elt.V -> Table .
   op singleton : Elt.K Elt&Err.V -> Table&Err .
   eq singleton(K,err.V) = errTable .
   eq singleton(K,V) = (K,V) | empTable .
 
+  -- キーに対応するエントリがあるか否か
   op isReg : Table Elt.K -> Bool .
   op isReg : Table&Err Elt.K -> Bool&Err .
   eq isReg(errTable,K2) = errBool .
   eq isReg(empTable,K2) = false .
   eq isReg((K,V) | T,K2) = if K == K2 then {true} else {isReg(T,K2)} .
 
+  -- キー指定によるエントリの参照
   op lookup : Table Elt.K -> Elt&Err.V .
   op lookup : Table&Err Elt.K -> Elt&Err.V .
   eq lookup(errTable,K2) = err.V .
   eq lookup(empTable,K2) = err.V .
   eq lookup((K,V) | T,K2) = if K == K2 then {V} else {lookup(T,K2)} .
 
+  -- キーバリューの組を指定してのエントリの更新
   op update : Table Elt.K Elt.V -> Table .
   op update : Table&Err Elt.K Elt&Err.V -> Table&Err .
   eq update(errTable,K2,VE2) = errTable .
@@ -126,6 +147,7 @@ mod! TABLE {
       then {(K,V2) | T}
       else {(K,V) | update(T,K2,V2)} .
 
+  -- キーバリューのテーブルを挿入
   op insert : Table Elt.K Elt.V -> Table&Err .
   op insert : Table&Err Elt.K Elt&Err.V -> Table&Err .
   eq insert(errTable,K2,VE) = errTable .
@@ -135,6 +157,7 @@ mod! TABLE {
       then {errTable}
       else {(K2,V2) | T} .
 
+  -- キー指定によるエントリの削除
   op remove : Table Elt.K -> Table .
   op remove : Table&Err Elt.K -> Table&Err .
   eq remove(errTable,K2) = errTable .
@@ -144,6 +167,7 @@ mod! TABLE {
       then {T}
       else {(K,V) | remove(T,K2)} .
 
+  -- キーバリューのテーブルを指定しての削除
   op delete : Table Elt.K -> Table&Err .
   op delete : Table&Err Elt.K -> Table&Err .
   eq delete(errTable,K2) = errTable .
@@ -163,6 +187,7 @@ mod! STRING-ERR principal-sort String {
   eq if false then {SE1} else {SE2} = SE2 .
 }
 
+-- QIDは quoted ID を定義しているビルトインモジュール
 view TRIV2QID from TRIV to QID {
   sort Elt -> Qid
 }
@@ -177,6 +202,7 @@ view TRIV-ERR-IF2STRING-ERR from TRIV-ERR-IF to STRING-ERR {
 
 -- Billing Program
 
+-- PAIRの制約を満たすため (_,_) を実装している
 mod! TAG {
   pr(PAIR(STRING-ERR,NAT-ERR) * {sort Pair -> Tag} )
   [Tag ErrTag < Tag&Err]
@@ -201,6 +227,9 @@ view TRIV-ERR-IF2TAG from TRIV-ERR-IF to TAG {
   op (if_then{_}else{_}) -> (if_then{_}else{_})
 }
 
+-- カタログ
+-- Catalog は Table 型のエイリアス
+-- キーにはQID, バリューにはERR,IF制約を満たす値を取る
 mod! CATALOG {
   pr(TABLE(K <= TRIV2QID, V <= TRIV-ERR-IF2TAG) * {
     sort Table -> Catalog,
@@ -212,6 +241,7 @@ mod! CATALOG {
     op errTable -> errCatalog } )
 }
 
+-- カートアイテム
 mod! CART-ITEM {
   pr(PAIR(QID,NAT-ERR) * {sort Pair -> CItem})
   [CItem ErrCItem < CItem&Err]
@@ -225,6 +255,9 @@ view TRIV-ERR2CART-ITEM from TRIV-ERR to CART-ITEM {
   op err -> errCItem,
 }
 
+-- カート
+-- Cart は List 型のエイリアス
+-- I, I2 でカタログの商品、そして N, N2 で個数を表現している
 mod! CART {
   pr(GLIST-ERR(E <= TRIV-ERR2CART-ITEM) * {
     sort List -> Cart,
@@ -248,6 +281,8 @@ mod! CART {
     = if I == I2 then {(I,N + N2) | C} else {(I2,N2) | mkCart(C,(I,N))} .
 }
 
+-- BILL-ITEM
+-- (文字列、数値、数値) のトリプルになっているのは支払いプログラムの mkBIL メソッドでの計算にもちいるため
 mod! BILL-ITEM {
   pr(TRIPLE(STRING-ERR,NAT-ERR,NAT-ERR) * {
     sort Triple -> BItem })
@@ -268,6 +303,8 @@ view TRIV-ERR2BILL-ITEM from TRIV-ERR to BILL-ITEM {
   op err -> errBItem
 }
 
+-- デフォルトでは BIList を引数にとってインスタンス化されるモジュール
+-- 小計メソッドがある
 mod! BILIST principal-sort BIList {
   pr(GLIST-ERR(E <= TRIV-ERR2BILL-ITEM) * {
     sort List -> BIList,
@@ -288,6 +325,7 @@ mod! BILIST principal-sort BIList {
   eq total((S,N,ST) | BIL) = ST + total(BIL) .
 }
 
+-- 支払いプログラム
 mod! BILL {
   pr(CATALOG)
   pr(CART)

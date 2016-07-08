@@ -1,9 +1,13 @@
+-- 組み込みモジュール TRIV をエラー型も扱えるよう拡張する
+-- TRIV は組み込みなので pr は不要
 mod* TRIV-ERR {
   [Elt Err < Elt&Err]
   op err : -> Err .
 }
 
 -- Parameterized Modules
+-- パラメータEは組み込みモジュール TRIV に制約を受ける
+-- Elt.E が最低でも1つの型に対応付けれらている必要がある
 mod! GLIST1(E :: TRIV) {
   [Nil NnList < List]
   op nil : -> Nil { constr } .
@@ -16,6 +20,7 @@ mod! GLIST1(E :: TRIV) {
 }
 
 -- Generic Lists with Error Handling
+-- このモジュールの引数 E はTRIV-ERRの制約を満たしている型により汎用化されている
 mod! GLIST2(E :: TRIV-ERR) {
   [Nil NnList < List]
   op nil : -> Nil {constr} .
@@ -54,6 +59,13 @@ mod! NAT-ERR {
   eq errNat quo NE = errNat .
 }
 
+-- Parameterized Modules はインスタンス化される際、
+-- 型 (sort) が必ず置き換えられなければならない
+-- また、型以外にも必要であれば operator の置き換えを求めることもある
+-- viewはその置き換え方法を指定する記法である
+-- ここでは TRIV-ERR の型および operator を定義して、
+-- 他の parameterized modules に指定できるようにしている
+-- 制約を定めた型はFPM、インスタンス化する先の型はAPMと呼ばれる
 view TRIV-ERR2NAT-ERR from TRIV-ERR to NAT-ERR {
   sort Elt -> Nat,
   sort Err -> ErrNat,
@@ -61,6 +73,7 @@ view TRIV-ERR2NAT-ERR from TRIV-ERR to NAT-ERR {
   op err -> errNat,
 }
 
+-- インスタンス化する型を指定する場合は「E <= view 名」という書式で指定する
 mod! NATLIST7 {
   pr(GLIST2(E <= TRIV-ERR2NAT-ERR) * {
     sort List -> NatList,
@@ -69,13 +82,6 @@ mod! NATLIST7 {
     op nil -> nlnil
   })
 }
-
-open NATLIST7 .
-  red hd(nlnil) .
-  red hd((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
-  red tl(nlnil) .
-  red tl((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
-close
 
 mod! GLIST-ERR(E :: TRIV-ERR) {
   [Nil NnList < List]
@@ -100,6 +106,7 @@ mod! GLIST-ERR(E :: TRIV-ERR) {
     : Bool List&Err List&Err -> List&Err .
 }
 
+-- エラーも扱える
 mod! NATLIST8 {
   pr(GLIST-ERR(E <= TRIV-ERR2NAT-ERR)
   * {sort List -> NatList,
@@ -118,6 +125,8 @@ view TRIV-ERR2NATLIST8 from TRIV-ERR to NATLIST8 {
   op err -> errNatList,
 }
 
+-- NATLISTを要素に持つLIST
+-- viewの指定時にはsortやoperatorを変名できる
 mod! NATLISTLIST1 {
   pr(GLIST-ERR(E <= TRIV-ERR2NATLIST8)
   * {sort List -> NatListList,
@@ -135,6 +144,7 @@ mod* TRIV-ERR-ORD {
   op ord : Elt Elt -> Bool .
 }
 
+-- 制約は err, ord のオペレータが指定されていること
 mod! GQSORT(E  ::  TRIV-ERR-ORD) {
   -- imports
   pr(GLIST-ERR(E))
@@ -155,6 +165,7 @@ mod! GQSORT(E  ::  TRIV-ERR-ORD) {
       else {partition(X,L,LL,Y | RL)} .
 }
 
+-- 制約は GQSORT と同じ
 mod! GMSORT(E :: TRIV-ERR-ORD) {
   -- imports
   pr(GLIST-ERR(E))
@@ -178,6 +189,7 @@ mod! GMSORT(E :: TRIV-ERR-ORD) {
       else { Y | merge(X | LL, RL) } .
 }
 
+-- TRIV-ERR-ORD を NAT-ERR で置き換えてインスタンス化するときに用いるビュー
 view TRIV-ERR-ORD2NAT-ERR from TRIV-ERR-ORD to NAT-ERR {
   sort Elt -> Nat,
   sort Err -> ErrNat,
@@ -192,6 +204,7 @@ mod! STRING-ERR {
   op errStr : -> ErrString {constr} .
 }
 
+-- TRIV-ERR-ORD を NAT-ERR で置き換えてインスタンス化するときに用いるビュー
 view TRIV-ERR-ORD2STRING-ERR from TRIV-ERR-ORD to STRING-ERR {
   sort Elt -> String,
   sort Err -> ErrString,
@@ -200,6 +213,7 @@ view TRIV-ERR-ORD2STRING-ERR from TRIV-ERR-ORD to STRING-ERR {
   op ord -> string<,
 }
 
+-- ordオペレータが定義されている
 mod! GLIST-ERR-ORD(E :: TRIV-ERR-ORD) {
   [Nil NnList < List]
   [List ErrList < List&Err]
@@ -230,6 +244,7 @@ mod! GLIST-ERR-ORD(E :: TRIV-ERR-ORD) {
   eq ord(X | L, Y | L2) = ord(X, Y) or ((not ord(Y, X)) and ord(L, L2)) .
 }
 
+-- NATでインスタンス化する (ord, err 制約を満たしている)
 mod! NATLIST9 {
   pr(GLIST-ERR-ORD(E <= TRIV-ERR-ORD2NAT-ERR)
   * {sort List -> NatList,
@@ -249,6 +264,7 @@ view TRIV-ERR-ORD2NATLIST9 from TRIV-ERR-ORD to NATLIST9 {
   op ord -> ord,
 }
 
+-- STRINGでインスタンス化する (ord, err 制約を満たしている)
 mod! STRLIST1 {
   pr(GLIST-ERR-ORD(E <= TRIV-ERR-ORD2STRING-ERR)
   * {sort List -> StrList,
@@ -270,6 +286,13 @@ view TRIV-ERR-ORD2STRLIST1 from TRIV-ERR-ORD to STRLIST1 {
 
 --
 
+--  open NATLIST7 .
+--    red hd(nlnil) .
+--    red hd((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
+--    red tl(nlnil) .
+--    red tl((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
+--  close
+--
 --  open NATLIST8 .
 --    red hd(nlnil) .
 --    red hd((4 | 3 | nlnil) @ (2 | 1 | 0 | nlnil)) .
@@ -306,21 +329,28 @@ view TRIV-ERR-ORD2STRLIST1 from TRIV-ERR-ORD to STRLIST1 {
 --    ("Java" | "C" | "CafeOBJ" | slnil) | ("CafeOBJ" | "C" | slnil) | nil) .
 --  close
 
+-- open
+-- 制約は GQSORT と同様なので E に取らせる view は流用できる
+
+-- NAT
 open GMSORT(E <= TRIV-ERR-ORD2NAT-ERR) .
   red msort(4 | 7 | 5 | 1 | 0 | 3 | 6 | 2 | nil) .
 close
 
+-- STRING
 open GMSORT(E <= TRIV-ERR-ORD2STRING-ERR) .
   red msort("Lisp" | "Python" | "Pascal" | "CafeOBJ" | "C" |
   "Java" | "Prolog" | "Fortran" | nil) .
 close
 
+-- NATのリスト
 open GMSORT(E <= TRIV-ERR-ORD2NATLIST9) .
   red msort((1 | 2 | nlnil) | (3 | 0 | 2 | nlnil) | (2 | nlnil) |
     (0 | nlnil) | nlnil | (1 | 1 | nlnil) | (3 | 0 | 1 | nlnil) |
     (1 | 0 | nlnil) | nil) .
 close
 
+-- STRINGのリスト
 open GMSORT(E <= TRIV-ERR-ORD2STRLIST1) .
   red msort(("CafeOBJ" | "Fortran" | slnil) |
   ("Java" | "C" | "Fortran" | slnil) | ("Fortran" | slnil) |
