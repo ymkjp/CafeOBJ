@@ -4,6 +4,9 @@ CafeOBJ
 #### 予約語のリファレンス
 * [CafeOBJ Reference Manual](https://cafeobj.org/files/reference-manual.html)
 
+#### レポート
+* [i217\_関数プログラミング \- Google Docs](https://docs.google.com/document/d/1RHgQTnHC9qZyASPTzMhTvYwqDxQcQ82sFdHTSOMqKAg/edit?usp=sharing)
+
 #### Run a programming language processor
 
 ```
@@ -37,9 +40,6 @@ cafeobj minila/boot
 良いです。レポート作成は修論等の練習でもありますので、レポート
 は論文形式であればなお良いです。
 ```
-
-#### レポート
-* 論文のようにプログラムを掲載せずに説明する
 
 #### 試験
 * 3: 項書換え

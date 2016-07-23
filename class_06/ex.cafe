@@ -30,6 +30,11 @@ mod! GLIST(E :: TRIV) {
   [Nil NnList < List]
   op nil : -> Nil {constr} .
   op _|_ : Elt.E List -> List {constr} .
+
+  vars L1 L2 : List .
+  op if_then{_}else{_} : Bool List List -> List .
+  eq if true then {L1} else {L2} = L1 .
+  eq if false then {L1} else {L2} = L2 .
 }
 
 mod* INF-LIST(E :: TRIV) {
@@ -40,7 +45,7 @@ mod* INF-LIST(E :: TRIV) {
   op _|_ : Elt.E InfList -> InfList {strat: (1 0)} .
 
   vars X Y : Elt.E .
-  vars IL IL2 : InfList .
+  vars IL IL1 IL2 : InfList .
   var NzN : NzNat .
   var N : Nat .
   var L : List .
@@ -59,6 +64,11 @@ mod* INF-LIST(E :: TRIV) {
 
   op zip : InfList InfList -> InfList .
   eq zip(X | IL,Y | IL2) = X | Y | zip(IL,IL2) .
+
+  -- `if then else` を定義する
+  op if_then{_}else{_} : Bool InfList InfList -> InfList .
+  eq if true then {IL1} else {IL2} = IL1 .
+  eq if false then {IL1} else {IL2} = IL2 .
 }
 
 mod! NAT-INF-LIST {
@@ -145,8 +155,7 @@ mod! SCHED {
   } )
   op sched : Nat -> Sched .
   var N : Nat .
-  -- @FIXME No possible parse for RHS
-  -- failed to evaluate the form:
+
   eq sched(N) = if (2 divides N)
     then { t1 | sched(N quo 2) }
     else { t2 | sched(N quo 2) } .
@@ -172,6 +181,10 @@ mod! FMUTEX {
     = (locked: true,pc1: L1,pc2: cs) .
   eq trans((locked: B,pc1: L1,pc2: cs),t2)
     = (locked: false,pc1: L1,pc2: rs) .
+  -- if
+  op if_then{_}else{_} : Bool Loc Loc -> Loc .
+  eq if true then {L1} else {L2} = L1 .
+  eq if false then {L1} else {L2} = L2 .
 }
 
 mod! COMP {
@@ -187,10 +200,10 @@ mod! SIM {
   pr(SCHED)
   op sim : State Nat -> Comp .
   op sub-sim : State Sched -> Comp .
-  var S : State.
+  var S : State .
   var N : Nat .
-  var NzD : NzNat.
-  var T : Tid.
+  var NzD : NzNat .
+  var T : Tid .
   var TIL : Sched .
   eq sim(S,N) = sub-sim(S,sched(N)) .
   eq sub-sim(S,T | TIL) = S | sub-sim(trans(S,T),TIL) .
@@ -203,7 +216,6 @@ mod! SIM {
   op sim-check : State Nat Nat -> FComp .
   op sub-sim-check : State Sched Nat -> FComp .
   var D : Nat .
-  var NzD : NzNat .
   eq sim-check(S,N,D) = sub-sim-check(S,sched(N),D) .
   eq sub-sim-check(S,T | TIL,0) = S | nil .
   eq sub-sim-check(S,T | TIL,NzD)
@@ -212,7 +224,7 @@ mod! SIM {
       else {S | nil} .
 }
 
----
+--
 
 set trace whole on
 open NAT-TRIPLE-IMLM .
@@ -248,7 +260,10 @@ close
 
 open HAMMING .
   red ham .
-  red take(ham,10) . red take(ham,20) . red take(ham,50) . red take(ham,100) .
+  red take(ham,10) .
+  red take(ham,20) .
+  red take(ham,50) .
+  -- red take(ham,100) .
 close
 
 open SCHED .
