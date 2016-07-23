@@ -26,7 +26,16 @@ mod! NAT-IF {
   eq if false then {N1} else {N2} = N2 .
 }
 
+mod! GLIST(E :: TRIV) {
+  [Nil NnList < List]
+  op nil : -> Nil {constr} .
+  op _|_ : Elt.E List -> List {constr} .
+}
+
 mod* INF-LIST(E :: TRIV) {
+  pr(NAT)
+  pr(GLIST(E))
+
   [InfList]
   op _|_ : Elt.E InfList -> InfList {strat: (1 0)} .
 
@@ -52,17 +61,12 @@ mod* INF-LIST(E :: TRIV) {
   eq zip(X | IL,Y | IL2) = X | Y | zip(IL,IL2) .
 }
 
-mod! GLIST(E :: TRIV) {
-  [Nil NnList < List]
-  op nil : -> Nil {constr} .
-  op _|_ : Elt.E List -> List {constr} .
-}
-
 mod! NAT-INF-LIST {
   pr(INF-LIST(NAT)) .
   op mkNILFrom : Nat -> InfList .
   op if_then{_}else{_} : Bool InfList InfList -> InfList .
-  var N : Nat . vars IL1 IL2 : InfList .
+  var N : Nat .
+  vars IL1 IL2 : InfList .
   eq mkNILFrom(N) = N | mkNILFrom(N + 1) .
   eq if true then {IL1} else {IL2} = IL1 .
   eq if false then {IL1} else {IL2} = IL2 .
@@ -114,12 +118,6 @@ mod! HAMMING {
     } .
 }
 
-mod! STATE principal-sort State {
-  pr(LOC)
-  [State]
-  op (locked:_,pc1:_,pc2:_) : Bool Loc Loc -> State {constr} .
-}
-
 mod! TID {
   [Tid]
   ops t1 t2 : -> Tid {constr} .
@@ -132,6 +130,26 @@ mod! TID {
 mod! LOC {
   [Loc]
   ops rs ms cs : -> Loc {constr} .
+}
+
+mod! STATE principal-sort State {
+  pr(LOC)
+  [State]
+  op (locked:_,pc1:_,pc2:_) : Bool Loc Loc -> State {constr} .
+}
+
+mod! SCHED {
+  pr(NAT)
+  pr(INF-LIST(TID) * {
+    sort InfList -> Sched
+  } )
+  op sched : Nat -> Sched .
+  var N : Nat .
+  -- @FIXME No possible parse for RHS
+  -- failed to evaluate the form:
+  eq sched(N) = if (2 divides N)
+    then { t1 | sched(N quo 2) }
+    else { t2 | sched(N quo 2) } .
 }
 
 mod! FMUTEX {
@@ -161,18 +179,6 @@ mod! COMP {
     sort InfList -> Comp,
     sort List -> FComp
   } )
-}
-
-mod! SCHED {
-  pr(NAT)
-  pr(INF-LIST(TID) * {
-    sort InfList -> Sched
-  } )
-  op sched : Nat -> Sched .
-  var N : Nat .
-  eq sched(N) = if 2 divides N
-    then {t1 | sched(N quo 2)}
-    else {t2 | sched(N quo 2)} .
 }
 
 mod! SIM {
@@ -207,14 +213,6 @@ mod! SIM {
 }
 
 ---
-
---  Loop: “Remainder Section”
---  rs: while test&set(locked) = true {}
---  “Critical Section”
---  cs: locked := false;
---
---  tmp := x;
---  x := true; return tmp;
 
 set trace whole on
 open NAT-TRIPLE-IMLM .
