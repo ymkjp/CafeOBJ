@@ -20,15 +20,19 @@ mod! COMPILE {
   var N : Nat .
   var IL : IList .
   -- compile
+  eq compile(S) = generate(S) @ (quit | iln) .
   -- generate
+  eq generate(estm) = iln .
   -- genForExp
+  eq genForExp(n(N)) = push(N) | iln .
+  eq genForExp(V) = load(V) | iln .
 }
 
 eof
 
 open COMPILE + VM .
   ops x y z tmp : -> Var .
-  
+
   op p1 : -> Stm .
   eq p1 = x := n(1) ;
           y := n(1) ;

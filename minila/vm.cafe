@@ -71,8 +71,15 @@ mod! VM {
   var S&E : Stack&Err .
   var I&E : Instruct&Err .
   -- run
+  eq run(IL) = exec(IL,0,empstk,empEnv) .
   -- exec
+  eq exec(IL,PC,errStack,E&E) = errEnv .
+  eq exec(IL,PC,S&E,errEnv) = errEnv .
+  eq exec(IL,PC,Stk,Env) = exec2(nth(IL,PC),IL,PC,Stk,Env) .
   -- exec2
+  eq exec2(add,IL,PC,empstk,Env) = errEnv .
+  eq exec2(add,IL,PC,N1 | empstk,Env) = errEnv .
+  eq exec2(add,IL,PC,N2 | N1 | Stk,Env) = exec(IL,PC + 1,N1 + N2 | Stk,Env) .
 }
 
 eof

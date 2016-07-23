@@ -35,15 +35,35 @@ mod! INTERPRET {
   -- eval
   eq eval(estm, EV) = EV .
   eq eval(V := E ; , EV) = evalAssign(V, evalExp(E, EV), EV) .
-  eq eval(if E {S1} else {S2}, EV) = evalIf(evalExp(E, EV)) .
+  eq eval(if E {S1} else {S2}, EV) = evalIf(evalExp(E, EV), S1, S2, EV) .
   eq eval(while E {S}, EV) = evalWhile(E, S, EV) .
-  -- eq eval(for V E1 E2 {S}, EV) = eval(..., EV) .
-  eq eval(S1 S2, EV) = eval(S2, eval(S1, EV)).
+  eq eval(S1 S2, EV) = eval(S2, eval(S1, EV)) .
+  eq eval(for V E1 E2 {S}, EV) = eval(
+    V := E1 ;
+    while V < E2 || V === E2 {
+      S
+      V := V + s(1) ;
+    }, EV) .
 
   -- evalAssign
+  -- eq evalAssign(V, N, errEnv) = errEnv .
+  -- eq evalAssign(V, errNat, EV) = errEnv .
+  -- update: Env&Err Var Nat&Err -> Env&Err .
+  eq evalAssign(V, N, EV) = update((V,N) | EV, V, N) .
 
   -- evalIf
+  -- eq evalIf(E, S1, S2, errEnv) = errEnv .
+  eq evalIf(0, S1, S2, EV) = eval(S2, EV) .
+  eq evalIf(1, S1, S2, EV) = eval(S1, EV) .
+
   -- evalWhile
+  eq evalWhile(E, S, errEnv) = errEnv .
+  eq evalWhile(E, S, EV) = EV .
+  eq evalWhile(E, S, EV)
+    = if evalExp(E, EV) == 0
+      then { EV }
+      else { evaiWhile(E, S, eval(S, EV)) } .
+
   -- evalExp
   eq evalExp(n(N) ,EV) = N .
   eq evalExp(V ,EV) = lookup(EV, V) .
@@ -56,8 +76,8 @@ mod! INTERPRET {
       then {1}
       else {0}
     } .
-  -- eq evalExp(E1 * E2 ,EV) =  .
-  -- eq evalExp(E1 && E2 ,EV) =  .
+  eq evalExp(E1 * E2 ,EV) = evalExp(E1, EV) * evalExp(E2, EV) .
+  eq evalExp(E1 && E2 ,EV) = evalExp(E1, EV) && evalExp(E2, EV) .
 }
 
 eof
