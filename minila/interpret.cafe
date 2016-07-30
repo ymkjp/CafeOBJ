@@ -42,17 +42,17 @@ mod! INTERPRET {
     V := E1 ;
     while V < E2 || V === E2 {
       S
-      V := V + s(1) ;
+      V := V + n(1) ;
     }, EV) .
 
   -- evalAssign
-  -- eq evalAssign(V, N, errEnv) = errEnv .
-  -- eq evalAssign(V, errNat, EV) = errEnv .
-  -- update: Env&Err Var Nat&Err -> Env&Err .
+  eq evalAssign(V, N, errEnv) = errEnv .
+  eq evalAssign(V, errNat, EV) = errEnv .
   eq evalAssign(V, N, EV) = update((V,N) | EV, V, N) .
 
   -- evalIf
-  -- eq evalIf(E, S1, S2, errEnv) = errEnv .
+  eq evalIf(errNat, S1, S2, errEnv) = errEnv .
+  eq evalIf(N, S1, S2, errEnv) = errEnv .
   eq evalIf(0, S1, S2, EV) = eval(S2, EV) .
   eq evalIf(1, S1, S2, EV) = eval(S1, EV) .
 
@@ -62,25 +62,25 @@ mod! INTERPRET {
   eq evalWhile(E, S, EV)
     = if evalExp(E, EV) == 0
       then { EV }
-      else { evaiWhile(E, S, eval(S, EV)) } .
+      else { evalWhile(E, S, eval(S, EV)) } .
 
   -- evalExp
+  eq evalExp(E,errEnv) = errNat .
   eq evalExp(n(N) ,EV) = N .
   eq evalExp(V ,EV) = lookup(EV, V) .
   eq evalExp(E1 + E2 ,EV) = evalExp(E1, EV) + evalExp(E2, EV) .
-  eq evalExp(E1 === E2 ,EV) =
-    if evalExp(E1, EV) == errNat or evalExp(E2, EV)
-    then {errNat}
-    else {
-      if evalExp(E1, EV) == evalExp(E2, EV)
-      then {1}
-      else {0}
-    } .
+  eq evalExp(E1 === E2 ,EV)
+    = if evalExp(E1, EV) == errNat or evalExp(E2, EV) == errNat
+      then {errNat}
+      else {
+        if evalExp(E1, EV) == evalExp(E2, EV)
+        then {1}
+        else {0}
+      } .
   eq evalExp(E1 * E2 ,EV) = evalExp(E1, EV) * evalExp(E2, EV) .
-  eq evalExp(E1 && E2 ,EV) = evalExp(E1, EV) && evalExp(E2, EV) .
 }
 
-eof
+-- eof
 
 open INTERPRET .
   ops x y z tmp : -> Var .
@@ -128,4 +128,17 @@ open INTERPRET .
             }
           } .
   red interpret(p4) .
+
+  -- Test
+  op p5 : -> Stm .
+  eq p5 = x := n(0) ;
+          for y n(1) n(10) {
+            if (x % n(15)) === n(0) {
+              x := y * n(10) ;
+            } else {
+              x := x * y;
+            }
+          } .
+  red interpret(p5) .
+
 close

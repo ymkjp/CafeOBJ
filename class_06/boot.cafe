@@ -2,5 +2,3 @@
 in minila/ast
 in minila/misc
 in minila/interpret
--- in minila/vm
--- in minila/compiler

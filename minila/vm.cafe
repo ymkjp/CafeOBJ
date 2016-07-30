@@ -82,7 +82,7 @@ mod! VM {
   eq exec2(add,IL,PC,N2 | N1 | Stk,Env) = exec(IL,PC + 1,N1 + N2 | Stk,Env) .
 }
 
-eof
+-- eof
 
 open VM .
   ops x y z : -> Var .
