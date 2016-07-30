@@ -28,7 +28,7 @@ mod! COMPILE {
   eq genForExp(V) = load(V) | iln .
 }
 
-eof
+-- eof
 
 open COMPILE + VM .
   ops x y z tmp : -> Var .
@@ -76,4 +76,16 @@ open COMPILE + VM .
             }
           } .
   red run(compile(p4)) .
+
+  -- Test
+  op p5 : -> Stm .
+  eq p5 = x := n(0) ;
+          for y n(1) n(10) {
+            if (x % n(15)) === n(0) {
+              x := y * n(10) ;
+            } else {
+              x := x * y;
+            }
+          } .
+  red run(compile(p5)) .
 close
